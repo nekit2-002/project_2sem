@@ -32,7 +32,7 @@ int main()
 	{
 		printf("Solution isnt exist");
 	}
-	
+
 	system("pause");
 	return 0;
 }
