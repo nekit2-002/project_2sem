@@ -14,7 +14,6 @@ def greeting(message):
         help(message)
     else:
         bot.send_message(message.from_user.id, 'Напиши /help')
-        bot.register_next_step_handler(message,start)
 def help(message):
         bot.send_message(message.from_user.id, "Напиши Привет чтобы бот ответил приветствием")
         bot.send_message(message.from_user.id, "Напиши Статья чтобы дать информацию о себе")
