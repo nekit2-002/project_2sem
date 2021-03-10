@@ -1,13 +1,19 @@
-﻿import telebot
+import telebot
+import requests
+from requests.exceptions import HTTPError
+requests.get('https://api.github.com')
 bot = telebot.TeleBot("1644508993:AAHywAyEf6dPbbVM57Hz0xsimAA8rfG5zWg")
 name = ''
 surname = ''
 age = 0
 @bot.message_handler(content_types=['text'])
 
+
+
 def greeting(message):
     if message.text == 'Привет':
         bot.send_message(message.from_user.id, "Привет чем я могу тебе помочь?")
+        connect(message)
     elif message.text == 'Статья':
         start(message)
     elif message.text== '/help':
@@ -40,6 +46,20 @@ def get_age(message):
     bot.send_message(message.from_user.id, 'Тебе ' + str(age) + ' лет, тебя зовут ' + name + ' ' + surname + '?')
 
 
+
+def connect(message):
+    for url in ['https://github.com/nekit2-002/project_2sem']:
+        try:
+            response = requests.get(url)
+
+            # если ответ успешен, исключения задействованы не будут
+            response.raise_for_status()
+        except HTTPError as http_err:
+            bot.send_message(message.from_user.id, f'HTTP error occurred: {http_err}')
+        except Exception as err:
+            bot.send_message(message.from_user.id,f'Other error occurred: {err}')
+        else:
+            bot.send_message(message.from_user.id, 'Успех')
 
 
 bot.polling(none_stop=True, interval=0)
