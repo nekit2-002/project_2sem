@@ -1,6 +1,10 @@
 import telebot
 import requests
 from requests.exceptions import HTTPError
+#import schedule
+#import pycron
+import time
+
 requests.get('https://api.github.com')
 bot = telebot.TeleBot("1644508993:AAHywAyEf6dPbbVM57Hz0xsimAA8rfG5zWg")
 name = ''
@@ -60,6 +64,10 @@ def connect(message):
             bot.send_message(message.from_user.id,f'Other error occurred: {err}')
         else:
             bot.send_message(message.from_user.id, 'Успех')
+        time.sleep(10)
 
+
+    while True:
+        connect(message)
 
 bot.polling(none_stop=True, interval=0)
