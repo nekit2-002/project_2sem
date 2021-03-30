@@ -1,3 +1,4 @@
+
 from flask import Flask, request, abort
 from json import loads
 app = Flask(__name__)
@@ -6,7 +7,9 @@ app = Flask(__name__)
 def index():
     try:
         payload = loads(request.data)
-        print(payload["repository"]["name"])
+        print( "%s push %d commits to %s" \
+            % (payload["pusher"]["name"], len(payload["commits"]), payload["ref"]))
+        # --&gt;
     except:
         abort(400)
 
