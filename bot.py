@@ -2,7 +2,6 @@ import telebot
 import requests
 from requests.exceptions import HTTPError
 #import schedule
-#import pycron
 import time
 
 requests.get('https://api.github.com')
@@ -71,3 +70,4 @@ def connect(message):
         connect(message)
 
 bot.polling(none_stop=True, interval=0)
+
