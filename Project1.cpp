@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-
+//clejjevve
 
 int disq(int a, int b, int c)
 {
