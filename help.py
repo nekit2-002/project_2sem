@@ -1,4 +1,4 @@
-# 0 1 1 2 3 5 8 13 21 3fnjnevveojfeksdmjofiwjfoijfwof
+# 0 1 1 2 3 5 8 13 21 3fnjnevveojfeksdmjofiwjfoijfwofcjne
 def foo(pos):
     if pos < 2:
         return pos
