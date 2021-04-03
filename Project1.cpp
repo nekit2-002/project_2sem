@@ -3,7 +3,7 @@
 #include <math.h>
 
 //clejjevve
-
+//vmevi
 int disq(int a, int b, int c)
 {
 	int d = b*b - 4 * a*c;
