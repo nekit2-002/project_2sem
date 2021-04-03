@@ -1,4 +1,3 @@
-
 from flask import Flask, request, abort
 from json import loads
 app = Flask(__name__)
@@ -7,7 +6,9 @@ app = Flask(__name__)
 def index():
     try:
         payload = loads(request.data)
-        print( "%s push %d commits to %s" \
+        print (payload["repository"]["name"])
+        if request.headers.get('X-GitHub-Event') == "push":
+            print ("%s push %d commits to %s" \
             % (payload["pusher"]["name"], len(payload["commits"]), payload["ref"]))
         # --&gt;
     except:
