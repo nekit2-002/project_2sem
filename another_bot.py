@@ -28,7 +28,7 @@ async def handle_message(message):
         del subscribers[f'{username}']
         print(subscribers)
 
-        await message.reply(f'User {username} has succesfully unsubscribed')
+        await message.reply(f'User {username} has successfully unsubscribed')
 
         return
 
@@ -36,20 +36,21 @@ async def handle_message(message):
         a = 10
         await bot.send_message(chat_id, parse_mode='Markdown', text=f'{a}')
 
+
     if username in subscribers:
             await message.reply(f'Hi again, {username}!')
             print((subscribers))
+
             #subscribers[f'{username}'] = printing()
             await subscribers.get(f'{username}')
+
+            return
 
     else:
         subscribers[f'{username}'] = printing()
         await message.reply(f'Hi, {username}! You have successfully subscribed')
 
         return
-
-
-
 
     # i = 0
     # while True:
