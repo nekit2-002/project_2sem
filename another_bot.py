@@ -41,13 +41,13 @@ async def handle_message(message):
             await message.reply(f'Hi again, {username}!')
             print((subscribers))
 
-            #subscribers[f'{username}'] = printing()
+            subscribers[f'{username}'] = printing()
             await subscribers.get(f'{username}')
 
             return
 
     else:
-        subscribers[f'{username}'] = printing()
+        subscribers.setdefault(f'{username}')
         await message.reply(f'Hi, {username}! You have successfully subscribed')
 
         return
