@@ -24,36 +24,32 @@ async def handle_message(message):
     for key in subscribers:
             print(key)
 
-    async def printing():
-        a = 10
-        await bot.send_message(chat_id, parse_mode='Markdown', text=f'{a}')
-
-
-    async def handle_unregister():
-
+    if message.text == 'unsubscribe':
         del subscribers[f'{username}']
         print(subscribers)
 
         await message.reply(f'User {username} has succesfully unsubscribed')
 
-        return subscribers
+        return
 
-    async def handle():
-        if username in subscribers:
+    async def printing():
+        a = 10
+        await bot.send_message(chat_id, parse_mode='Markdown', text=f'{a}')
+
+    if username in subscribers:
             await message.reply(f'Hi again, {username}!')
             print((subscribers))
-            await printing()
+            #subscribers[f'{username}'] = printing()
+            await subscribers.get(f'{username}')
 
-        else:
-            subscribers[f'{username}'] = printing()
-            await message.reply(f'Hi, {username}! You have successfully subscribed')
+    else:
+        subscribers[f'{username}'] = printing()
+        await message.reply(f'Hi, {username}! You have successfully subscribed')
 
         return
 
-    if message.text == 'unsubscribe':
-        await handle_unregister()
-    else:
-        await handle()
+
+
 
     # i = 0
     # while True:
