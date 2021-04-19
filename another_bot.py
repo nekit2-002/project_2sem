@@ -2,36 +2,70 @@
 import aiogram as telegram
 import asyncio
 import logging
-#import os
+import os
 
 from aiohttp import web
 
 # * Часть отвечающая за бота
 
-#TG_TOKEN = os.environ.get('TG_TOKEN')
-TG_TOKEN = '1644508993:AAHywAyEf6dPbbVM57Hz0xsimAA8rfG5zWg'
+TG_TOKEN = os.environ['TG_TOKEN']
+#TG_TOKEN = '1644508993:AAHywAyEf6dPbbVM57Hz0xsimAA8rfG5zWg'
 
 bot = telegram.Bot(token=TG_TOKEN)
 dispatcher = telegram.Dispatcher(bot)
+subscribers = dict()
 
 
 @dispatcher.message_handler()
-async def send_welcome(message):
-    await message.reply('Hi! You have successfully subscribed')
+async def handle_message(message):
+    chat_id = message.chat.id
+    username = message['from'].username
+
+    for key in subscribers:
+            print(key)
+
+    async def printing():
+        a = 10
+        await bot.send_message(chat_id, parse_mode='Markdown', text=f'{a}')
 
 
-    async def post_updates(chat_id):
-        logging.info('starting new updater')
+    async def handle_unregister():
 
-        i = 0
-        while True:
-            i += 1
-            await bot.send_message(chat_id, parse_mode='Markdown', text=f'''
-            heartbeat `{i}`
-        ''')
+        print(type(subscribers.get(f'{username}')))
 
-            await asyncio.sleep(5)
-    await asyncio.create_task(post_updates(message.chat.id))
+        task = asyncio.create_task(subscribers.get(f'{username}'))
+        subscribers[f'{username}'] = task
+        task.cancel()
+        del subscribers[f'{username}']
+        for key in subscribers:
+            print(key)
+
+        await bot.send_message(chat_id, parse_mode='Markdown', text=f'User {username} has succesfully unsubscribed')
+
+        return
+
+    async def handle():
+        if username in subscribers:
+            await message.reply(f'Hi again, {username}!')
+            print((subscribers))
+            await printing()
+        else:
+            subscribers[f'{username}'] = printing()
+            await message.reply(f'Hi, {username}! You have successfully subscribed')
+        return
+
+    if message.text == 'unsubscribe':
+        await handle_unregister()
+    else:
+        await handle()
+
+    # i = 0
+    # while True:
+    #     i += 1
+    #     await bot.send_message(chat_id, parse_mode='Markdown', text=f'''
+    #     heartbeat `{i}`
+    #     ''')
+    #     await asyncio.sleep(5)
 
 # * Часть связанная с сервером
 
