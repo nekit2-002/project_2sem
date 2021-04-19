@@ -3,6 +3,9 @@ import requests
 from requests.exceptions import HTTPError
 #import schedule
 import time
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 requests.get('https://api.github.com')
 bot = telebot.TeleBot("1644508993:AAHywAyEf6dPbbVM57Hz0xsimAA8rfG5zWg")
