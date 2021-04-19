@@ -30,25 +30,19 @@ async def handle_message(message):
 
 
     async def handle_unregister():
+        await subscribers.get(f'{username}')
 
-        print(type(subscribers.get(f'{username}')))
-
-        task = asyncio.create_task(subscribers.get(f'{username}'))
-        subscribers[f'{username}'] = task
-        task.cancel()
         del subscribers[f'{username}']
-        for key in subscribers:
-            print(key)
+        print(subscribers)
+        #await message.reply(chat_id, parse_mode='Markdown', text=f'User {username} has succesfully unsubscribed')
 
-        await bot.send_message(chat_id, parse_mode='Markdown', text=f'User {username} has succesfully unsubscribed')
-
-        return
+        return subscribers
 
     async def handle():
         if username in subscribers:
             await message.reply(f'Hi again, {username}!')
             print((subscribers))
-            await printing()
+
         else:
             subscribers[f'{username}'] = printing()
             await message.reply(f'Hi, {username}! You have successfully subscribed')
