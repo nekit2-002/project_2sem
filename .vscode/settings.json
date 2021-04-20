@@ -5,6 +5,7 @@
         "aiohttp",
         "environ",
         "printing",
+        "spam",
         "subscribers",
         "succesfully",
         "unregister",

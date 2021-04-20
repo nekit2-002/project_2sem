@@ -9,10 +9,11 @@ from aiohttp import web
 # * Часть отвечающая за бота
 
 TG_TOKEN = os.environ['TG_TOKEN']
-#TG_TOKEN = '1644508993:AAHywAyEf6dPbbVM57Hz0xsimAA8rfG5zWg'
 
 bot = telegram.Bot(token=TG_TOKEN)
 dispatcher = telegram.Dispatcher(bot)
+
+lock = asyncio.Lock()
 subscribers = dict()
 
 
@@ -21,44 +22,37 @@ async def handle_message(message):
     chat_id = message.chat.id
     username = message['from'].username
 
+    async def spam():
+        i = 0
+        while True:
+            i += 1
+            await bot.send_message(chat_id, parse_mode='Markdown', text=f'''
+            heartbeat `{i}`
+            ''')
+            await asyncio.sleep(2)
+
     for key in subscribers:
             print(key)
 
     if message.text == 'unsubscribe':
-        del subscribers[username]
+        print(type(subscribers.get(username)))
         print(subscribers)
-
-        await message.reply(f'User  {username}  has successfully unsubscribed')
-
+        subscribers.pop(username).cancel()
+        print(subscribers)
+        await bot.send_message(chat_id, parse_mode='Markdown', text=f'''User `{username}` unsubscribed''')
         return
-
-    async def printing():
-        a = 10
-        await bot.send_message(chat_id, parse_mode='Markdown', text=f'{a}')
-
 
     if username in subscribers:
-            await message.reply(f'Hi again, {username}!')
-            print((subscribers))
+        await message.reply(f'Hi again, {username}!')
+        return  # the user is already subscribed
 
-            subscribers[username] = printing()
-            await subscribers.get(username)
+    subscribers[username] = asyncio.create_task(spam())
+    await message.reply(f'Hi, {username}! You have successfully subscribed')
 
-            return
 
-    else:
-        subscribers.setdefault(username)
-        await message.reply(f'Hi, {username}! You have successfully subscribed')
 
-        return
 
-    # i = 0
-    # while True:
-    #     i += 1
-    #     await bot.send_message(chat_id, parse_mode='Markdown', text=f'''
-    #     heartbeat `{i}`
-    #     ''')
-    #     await asyncio.sleep(5)
+
 
 # * Часть связанная с сервером
 
