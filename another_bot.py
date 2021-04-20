@@ -35,8 +35,8 @@ async def handle_message(message):
             print(key)
 
     if message.text == 'unsubscribe':
-        print(type(subscribers.get(username)))
-        print(subscribers)
+        # print(type(subscribers.get(username)))
+        # print(subscribers)
         subscribers.pop(username).cancel()
         print(subscribers)
         await bot.send_message(chat_id, parse_mode='Markdown', text=f'''User `{username}` unsubscribed''')
@@ -46,12 +46,9 @@ async def handle_message(message):
         await message.reply(f'Hi again, {username}!')
         return  # the user is already subscribed
 
-    subscribers[username] = asyncio.create_task(spam())
-    await message.reply(f'Hi, {username}! You have successfully subscribed')
-
-
-
-
+    async with lock:
+        subscribers[username] = asyncio.create_task(spam())
+        await message.reply(f'Hi, {username}! You have successfully subscribed')
 
 
 # * Часть связанная с сервером
