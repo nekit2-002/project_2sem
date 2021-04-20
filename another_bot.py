@@ -25,10 +25,10 @@ async def handle_message(message):
             print(key)
 
     if message.text == 'unsubscribe':
-        del subscribers[f'{username}']
+        del subscribers[username]
         print(subscribers)
 
-        await message.reply(f'User {username} has successfully unsubscribed')
+        await message.reply(f'User  {username}  has successfully unsubscribed')
 
         return
 
@@ -41,13 +41,13 @@ async def handle_message(message):
             await message.reply(f'Hi again, {username}!')
             print((subscribers))
 
-            subscribers[f'{username}'] = printing()
-            await subscribers.get(f'{username}')
+            subscribers[username] = printing()
+            await subscribers.get(username)
 
             return
 
     else:
-        subscribers.setdefault(f'{username}')
+        subscribers.setdefault(username)
         await message.reply(f'Hi, {username}! You have successfully subscribed')
 
         return
