@@ -13,6 +13,10 @@ jobs:
           sudo apt -y install python3-pip
           pip3 install flake8
 
+      - name: Checkout
+        uses: "actions/checkout@v2"
+
       - name: Run flake8
         run: |
           python3 -m flake8 .
+
