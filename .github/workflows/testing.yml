@@ -1,0 +1,17 @@
+name: CI
+on:
+  push: {}
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt -y update
+          sudo apt -y install python3-flake8
+
+      - name: Run flake8
+        run: |
+          flake8 .
