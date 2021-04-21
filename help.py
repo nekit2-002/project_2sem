@@ -5,4 +5,5 @@ def foo(pos):
     else:
         return foo(pos - 1) + foo(pos - 2)
 
+
 print(foo(int(input("Введите число -> "))))
