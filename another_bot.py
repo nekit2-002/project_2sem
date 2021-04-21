@@ -34,16 +34,17 @@ async def handle_message(message):
     for key in subscribers:
             print(key)
 
-    if message.text == 'unsubscribe':
-        # print(type(subscribers.get(username)))
-        # print(subscribers)
-        subscribers.pop(username).cancel()
-        print(subscribers)
-        await bot.send_message(chat_id, parse_mode='Markdown', text=f'''User `{username}` unsubscribed''')
-        return
 
     if username in subscribers:
+        async with lock:
+            if message.text == 'unsubscribe':
+                subscribers.pop(username).cancel()
+                print(subscribers)
+                await bot.send_message(chat_id, parse_mode='Markdown', text=f'User `{username}` unsubscribed')
+                return
+
         await message.reply(f'Hi again, {username}!')
+
         return  # the user is already subscribed
 
     async with lock:
