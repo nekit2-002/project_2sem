@@ -35,11 +35,8 @@ async def handle_message(message):
             )
             await asyncio.sleep(2)
 
-    for key in subscribers:
-        print(key)
-
-    if username in subscribers:
-        if message.text == 'unsubscribe':
+    async def unregister():
+        async with lock:
             subscribers.pop(username).cancel()
             print(subscribers)
             await bot.send_message(
@@ -50,23 +47,30 @@ async def handle_message(message):
             '''
             )
 
+        return
+
+    async def subscribe():
+        async with lock:
+            subscribers[username] = asyncio.create_task(spam())
+            await message.reply(
+                f'Hi, {username}! You have successfully subscribed'
+            )
+            return
+
+    if username in subscribers:
+        if message.text == 'unsubscribe':
+            await unregister()
             return
 
         await message.reply(f'Hi again, {username}!')
 
         return  # the user is already subscribed
 
-    async with lock:
-        subscribers[username] = asyncio.create_task(spam())
-        await message.reply(
-            f'Hi, {username}! You have successfully subscribed'
-        )
-
+    await subscribe()
 
 # * Часть связанная с сервером
 
 routes = web.RouteTableDef()
-
 
 @routes.post('/github_events')
 async def handle_github(request):
