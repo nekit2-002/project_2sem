@@ -10,8 +10,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt -y update
-          sudo apt -y install python3-flake8
+          sudo apt -y install python3-pip
 
       - name: Run flake8
         run: |
-          flake8 .
+          python3 -m flake8 .
