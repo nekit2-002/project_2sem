@@ -68,16 +68,30 @@ async def handle_message(message):
 
     await subscribe()
 
+
 # * Часть связанная с сервером
 
 routes = web.RouteTableDef()
+
 
 @routes.post('/github_events')
 async def handle_github(request):
     logging.info('received new event')
 
+    payload = await request.json()
+
+    repo = payload['repository']['name']
+    pusher_name = payload['pusher']['name']
+    commits = payload['commits']
+    num = len(commits)
+    # TODO: add the event from headers
+
+    branch = payload['ref']
+    print('Repository name is ', repo)
+    print('User', pusher_name, 'pushed', num, 'commits to ', branch)
+
     # Reply with 200 OK
-    return web.Response()
+    return
 
 
 async def run_server():
