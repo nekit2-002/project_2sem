@@ -5,93 +5,89 @@ import logging
 import os
 
 from aiohttp import web
-
-# * Часть отвечающая за бота
+from textwrap import dedent
 
 TG_TOKEN = os.environ['TG_TOKEN']
+PORT = os.environ.get('PORT', 8080)
 
 bot = telegram.Bot(token=TG_TOKEN)
 dispatcher = telegram.Dispatcher(bot)
 
-lock = asyncio.Lock()
-subscribers = dict()
+subscribers = {}
 
 
 @dispatcher.message_handler()
 async def handle_message(message):
-    chat_id = message.chat.id
+    chat = message.chat.id
     username = message['from'].username
 
-    async def spam():
-        i = 0
-        while True:
-            i += 1
-            await bot.send_message(
-                chat_id,
-                parse_mode='Markdown',
-                text=f'''
-            heartbeat `{i}`
-            '''
-            )
-            await asyncio.sleep(2)
+    logging.info(f'got new TG message from {username}, chat: {chat}')
 
-    async def unregister():
-        async with lock:
-            subscribers.pop(username).cancel()
-            print(subscribers)
-            await bot.send_message(
-                chat_id,
-                parse_mode='Markdown',
-                text=f'''
-            User `{username}` unsubscribed
-            '''
-            )
+    async def do_listen():
+        await message.reply(parse_mode='Markdown',
+                            text='Subscribing to all repositories')
 
-        return
+        subscribers[username] = chat
 
-    async def subscribe():
-        async with lock:
-            subscribers[username] = asyncio.create_task(spam())
-            await message.reply(
-                f'Hi, {username}! You have successfully subscribed'
-            )
-            return
+    async def do_cancel():
+        await message.reply(parse_mode='Markdown',
+                            text='Cancelling all subscriptions')
 
-    if username in subscribers:
-        if message.text == 'unsubscribe':
-            await unregister()
-            return
+        subscribers.pop(username, None)
 
-        await message.reply(f'Hi again, {username}!')
+    async def do_error():
+        commands = ', '.join(list(actions.keys()))
 
-        return  # the user is already subscribed
+        reply = dedent(f'''
+            *Unknown command.*
+            Available commands: {commands}.
+        ''')
 
-    await subscribe()
+        await message.reply(parse_mode='Markdown', text=reply)
 
+    actions = {
+        "listen": do_listen,
+        "cancel": do_cancel,
+    }
 
-# * Часть связанная с сервером
+    action = actions.get(message.text, do_error)
+    await action()
+
 
 routes = web.RouteTableDef()
 
 
 @routes.post('/github_events')
 async def handle_github(request):
-    logging.info('received new event')
+    data = await request.json()
 
-    payload = await request.json()
+    repo = data['repository']
+    repo_name = repo['full_name']
+    repo_url = repo['html_url']
 
-    repo = payload['repository']['name']
-    pusher_name = payload['pusher']['name']
-    commits = payload['commits']
-    num = len(commits)
-    # TODO: add the event from headers
+    user = data['pusher']['name']
+    branch = data['ref'].replace('refs/heads/', '')
 
-    branch = payload['ref']
-    print('Repository name is ', repo)
-    print('User', pusher_name, 'pushed', num, 'commits to ', branch)
+    for commit in data['commits']:
+        commit_hash = commit['id'][:8]
+        commit_url = commit['url']
+
+        message = dedent(f'''
+            *{user}* has pushed [{commit_hash}]({commit_url}) to `{branch}`.
+            Repository: [{repo_name}]({repo_url}).
+        ''')
+        logging.info(message)
+
+        for chat in subscribers.values():
+            await bot.send_message(chat, parse_mode='Markdown', text=message)
 
     # Reply with 200 OK
-    return
+    return web.Response()
+
+
+@routes.get('/')
+async def index(request):
+    return web.Response(text='Up and running')
 
 
 async def run_server():
@@ -101,7 +97,7 @@ async def run_server():
     runner = web.AppRunner(app)
     await runner.setup()
 
-    site = web.TCPSite(runner)
+    site = web.TCPSite(runner, host='0.0.0.0', port=PORT)
     await site.start()
 
     # Sleep forever
