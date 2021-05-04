@@ -14,9 +14,6 @@ bot = telegram.Bot(token=TG_TOKEN)
 dispatcher = telegram.Dispatcher(bot)
 
 subscribers = {}
-names = subscribers.keys()
-chats_and_repos = list(subscribers.values())
-user_chat, wanted_repos = chats_and_repos[0], chats_and_repos[1]
 
 repositories_full = ['nekit2-002/dummy', 'nekit2-002/dummy2']
 
@@ -59,6 +56,8 @@ async def handle_message(message):
 
                     subscribers[username] = (chat, repositories_to_listen)
 
+        await handle_name(message)
+
     async def do_cancel():
         await message.reply(parse_mode='Markdown',
                             text='Cancelling all subscriptions')
@@ -90,6 +89,8 @@ routes = web.RouteTableDef()
 @routes.post('/github_events')
 async def handle_github(request):
     data = await request.json()
+    chats_and_repos = list(subscribers.values())
+    user_chat, wanted_repos = chats_and_repos[0], chats_and_repos[1]
 
     repo = data['repository']
     repo_name = repo['full_name']
