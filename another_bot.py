@@ -14,8 +14,11 @@ bot = telegram.Bot(token=TG_TOKEN)
 dispatcher = telegram.Dispatcher(bot)
 
 subscribers = {}
+names = subscribers.keys()
+chats_and_repos = list(subscribers.values())
+user_chat, wanted_repos = chats_and_repos[0], chats_and_repos[1]
+
 repositories_full = ['nekit2-002/dummy', 'nekit2-002/dummy2']
-repositories_to_listen = []
 
 
 @dispatcher.message_handler()
@@ -29,28 +32,32 @@ async def handle_message(message):
         await message.reply(parse_mode='Markdown',
                             text='Subscribing to all repositories')
 
-        repositories_to_listen = repositories_full
-
-        subscribers[username] = (chat, repositories_to_listen)
+        subscribers[username] = (chat, repositories_full)
 
     async def listen_to():
+        repositories_to_listen = []
+
         await bot.send_message(chat, parse_mode='Markdown', text='''
-        Choose the repository you want to be informed about!
+        Choose the repositories you want to be informed about!
         ''')
+
         await bot.send_message(chat, parse_mode='Markdown',
                                text=f'{repositories_full}')
 
-        response = message.text
+        for index in range(len(repositories_full)):
 
-        for repository in range(len(repositories_full)):
-            if response == repository:
-                await bot.send_message(chat, parse_mode='Markdown', text=f'''
-                You have chosen the repository {repository} to listen to.
-                ''')
+            @dispatcher.message_handler()
+            async def handle_name(message):
+                if message.text == repositories_full[index]:
+                    await bot.send_message(chat, parse_mode='Markdown', text=f'''
+                    You have chosen the repository {repositories_full[index]}
+                    to listen to.
+                    ''')
 
-                repositories_to_listen.append(f'{repository}')
+                    repositories_to_listen.append(f'''
+                    {repositories_full[index]}''')
 
-                subscribers[username] = (chat, repositories_to_listen)
+                    subscribers[username] = (chat, repositories_to_listen)
 
     async def do_cancel():
         await message.reply(parse_mode='Markdown',
@@ -71,15 +78,13 @@ async def handle_message(message):
     actions = {
         'listen': do_listen,
         "cancel": do_cancel,
-        'listen_to': listen_to
+        'listen to': listen_to
     }
     action = actions.get(message.text, do_error)
     await action()
 
 
 routes = web.RouteTableDef()
-keys = subscribers.keys()
-values = list(subscribers.values())
 
 
 @routes.post('/github_events')
@@ -94,23 +99,19 @@ async def handle_github(request):
     branch = data['ref'].replace('refs/heads/', '')
 
     for commit in data['commits']:
-        commit_hash = commit['id'][:8]
-        commit_url = commit['url']
 
         message = dedent(f'''
-            *{user}* has pushed [{commit_hash}]({commit_url}) to `{branch}`.
+            *{user}* has pushed a commit to `{branch}`.
             Repository: [{repo_name}]({repo_url}).
         ''')
 
         logging.info(message)
-        for i in range(len(subscribers)):
-            for chat in values[i][0]:
-                for name in range(len(keys)):
-                    for rep in range(len(repositories_to_listen)):
-                        if repo_name == rep:
-                            await bot.send_message(chat,
-                                                   parse_mode='Markdown',
-                                                   text=message)
+
+        for user in subscribers:
+            for repository in range(len(wanted_repos)):
+                if repo_name == wanted_repos[repository]:
+                    await bot.send_message(user_chat, parse_mode='Markdown',
+                                           text=message)
 
     # Reply with 200 OK
     return web.Response()
