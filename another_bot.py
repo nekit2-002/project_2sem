@@ -24,6 +24,7 @@ async def handle_message(message):
     chat = message.chat.id
     username = message['from'].username
     txt = message.text
+    repositories_to_listen = []
 
     logging.info(f'got new TG message from {username}, chat: {chat}')
 
@@ -32,6 +33,8 @@ async def handle_message(message):
                             text='Subscribing to required repositories')
 
         subscribers[username] = (chat, array)
+        print(subscribers.get(username))
+        print(subscribers)
 
     async def do_cancel():
         await message.reply(parse_mode='Markdown',
@@ -41,18 +44,41 @@ async def handle_message(message):
 
     async def parser(txt):
         wanted_repos = re.findall(r'nekit2-002/\w*', txt)
-        repositories_to_listen = []
+        to_cancel = re.findall(r'cancel', txt)
 
-        for repo in range(len(wanted_repos)):
-            for match in range(len(repositories_full)):
-                if wanted_repos[repo] == repositories_full[match]:
-                    repositories_to_listen.append(wanted_repos[repo])
-                    await do_listen(repositories_to_listen)
+        if username in subscribers:
+            current_listen = subscribers.get(username)[1]
+            print(current_listen)
 
-        await bot.send_message(chat, parse_mode='Markdown', text=f'''
-        The current list of listened repositories is
-        `{repositories_to_listen}`!
-        ''')
+            if len(to_cancel) != 0:
+                await do_cancel()
+                return
+
+            for i in range(len(wanted_repos)):
+                current_listen.append(wanted_repos[i])
+
+            changes = dedent(f'''
+            The listened list of repositories has changed! The current list is:
+            `{current_listen}`
+            ''')
+
+            await bot.send_message(chat, parse_mode='Markdown', text=changes)
+
+        else:
+            for repo in range(len(wanted_repos)):
+                for match in range(len(repositories_full)):
+                    if wanted_repos[repo] == repositories_full[match]:
+                        repositories_to_listen.append(wanted_repos[repo])
+                        await do_listen(repositories_to_listen)
+
+                    elif len(to_cancel) != 0:
+                        await do_cancel()
+
+                show = dedent(f'''
+                The current list of listened repositories is:
+                `{repositories_to_listen}`!''')
+
+                await bot.send_message(chat, parse_mode='Markdown', text=show)
 
     await parser(txt)
 
