@@ -97,18 +97,22 @@ async def handle_github(request):
     user = data['pusher']['name']
     branch = data['ref'].replace('refs/heads/', '')
 
-    for commit in data['commits']:
-        # commit_hash = commit['id'][:8]
-        # commit_url = commit['url']
+    for user_in_sub in subscribers:
+        chats_and_repos = subscribers.get(user_in_sub)
+        chat = chats_and_repos[0]
+        wanted_repos = chats_and_repos[1]
 
         message = dedent(f'''
             *{user}* has pushed a commit to `{branch}`.
             Repository: [{repo_name}]({repo_url}).
         ''')
-        logging.info(message)
 
-        for chat in subscribers.values():
-            await bot.send_message(chat, parse_mode='Markdown', text=message)
+        for reposit in range(len(wanted_repos)):
+            if repo_name == wanted_repos[reposit]:
+                logging.info(message)
+
+                await bot.send_message(chat, parse_mode='Markdown',
+                                       text=message)
 
     # Reply with 200 OK
     return web.Response()
