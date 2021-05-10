@@ -3,6 +3,7 @@ import aiogram as telegram
 import asyncio
 import logging
 import os
+import re
 
 from aiohttp import web
 from textwrap import dedent
@@ -22,41 +23,15 @@ repositories_full = ['nekit2-002/dummy', 'nekit2-002/dummy2']
 async def handle_message(message):
     chat = message.chat.id
     username = message['from'].username
+    txt = message.text
 
     logging.info(f'got new TG message from {username}, chat: {chat}')
 
-    async def do_listen():
+    async def do_listen(array):
         await message.reply(parse_mode='Markdown',
-                            text='Subscribing to all repositories')
+                            text='Subscribing to required repositories')
 
-        subscribers[username] = (chat, repositories_full)
-
-    async def listen_to():
-        repositories_to_listen = []
-
-        await bot.send_message(chat, parse_mode='Markdown', text='''
-        Choose the repositories you want to be informed about!
-        ''')
-
-        await bot.send_message(chat, parse_mode='Markdown',
-                               text=f'{repositories_full}')
-
-        for index in range(len(repositories_full)):
-
-            @dispatcher.message_handler()
-            async def handle_name(message):
-                if message.text == repositories_full[index]:
-                    await bot.send_message(chat, parse_mode='Markdown', text=f'''
-                    You have chosen the repository {repositories_full[index]}
-                    to listen to.
-                    ''')
-
-                    repositories_to_listen.append(f'''
-                    {repositories_full[index]}''')
-
-                    subscribers[username] = (chat, repositories_to_listen)
-
-        await handle_name(message)
+        subscribers[username] = (chat, array)
 
     async def do_cancel():
         await message.reply(parse_mode='Markdown',
@@ -64,23 +39,22 @@ async def handle_message(message):
 
         subscribers.pop(username, None)
 
-    async def do_error():
-        commands = ', '.join(list(actions.keys()))
+    async def parser(txt):
+        wanted_repos = re.findall(r'nekit2-002/\w*', txt)
+        repositories_to_listen = []
 
-        reply = dedent(f'''
-            *Unknown command.*
-            Available commands: {commands}.
+        for repo in range(len(wanted_repos)):
+            for match in range(len(repositories_full)):
+                if wanted_repos[repo] == repositories_full[match]:
+                    repositories_to_listen.append(wanted_repos[repo])
+                    await do_listen(repositories_to_listen)
+
+        await bot.send_message(chat, parse_mode='Markdown', text=f'''
+        The current list of listened repositories is
+        `{repositories_to_listen}`!
         ''')
 
-        await message.reply(parse_mode='Markdown', text=reply)
-
-    actions = {
-        'listen': do_listen,
-        "cancel": do_cancel,
-        'listen to': listen_to
-    }
-    action = actions.get(message.text, do_error)
-    await action()
+    await parser(txt)
 
 
 routes = web.RouteTableDef()
@@ -89,8 +63,6 @@ routes = web.RouteTableDef()
 @routes.post('/github_events')
 async def handle_github(request):
     data = await request.json()
-    chats_and_repos = list(subscribers.values())
-    user_chat, wanted_repos = chats_and_repos[0], chats_and_repos[1]
 
     repo = data['repository']
     repo_name = repo['full_name']
@@ -100,19 +72,17 @@ async def handle_github(request):
     branch = data['ref'].replace('refs/heads/', '')
 
     for commit in data['commits']:
+        # commit_hash = commit['id'][:8]
+        # commit_url = commit['url']
 
         message = dedent(f'''
             *{user}* has pushed a commit to `{branch}`.
             Repository: [{repo_name}]({repo_url}).
         ''')
-
         logging.info(message)
 
-        for user in subscribers:
-            for repository in range(len(wanted_repos)):
-                if repo_name == wanted_repos[repository]:
-                    await bot.send_message(user_chat, parse_mode='Markdown',
-                                           text=message)
+        for chat in subscribers.values():
+            await bot.send_message(chat, parse_mode='Markdown', text=message)
 
     # Reply with 200 OK
     return web.Response()
