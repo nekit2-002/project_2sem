@@ -33,25 +33,45 @@ async def handle_message(message):
                             text='Subscribing to required repositories')
 
         subscribers[username] = (chat, array)
-        print(subscribers.get(username))
-        print(subscribers)
+        # print(subscribers.get(username))
+        # print(subscribers)
 
-    async def do_cancel():
+    async def do_cancel(array):
         await message.reply(parse_mode='Markdown',
-                            text='Cancelling all subscriptions')
+                            text='Cancelling required subscriptions')
 
-        subscribers.pop(username, None)
+        chats_and_repos = subscribers.get(username)
+        current_repos = chats_and_repos[1]
+
+        for phrase in range(len(array)):
+            repo_to_cancel = re.findall(r'nekit2-002/\w*', array[phrase])
+            print(array)
+            print(current_repos)
+            print(repo_to_cancel)
+
+            for repo in range(len(current_repos)):
+                if repo_to_cancel[0] == current_repos[repo]:
+                    current_repos.pop(repo)
+                    break
+
+        changes = dedent(f'''
+            One of the listened repositories has been deleted!
+            The current list is:
+            `{current_repos}`
+            ''')
+
+        await bot.send_message(chat, parse_mode='Markdown', text=changes)
 
     async def parser(txt):
         wanted_repos = re.findall(r'nekit2-002/\w*', txt)
-        to_cancel = re.findall(r'cancel', txt)
+        to_cancel = re.findall(r'cancel nekit2-002/\w*', txt)
 
         if username in subscribers:
             current_listen = subscribers.get(username)[1]
-            print(current_listen)
+            # print(current_listen)
 
             if len(to_cancel) != 0:
-                await do_cancel()
+                await do_cancel(to_cancel)
                 return
 
             for i in range(len(wanted_repos)):
@@ -74,11 +94,11 @@ async def handle_message(message):
                     elif len(to_cancel) != 0:
                         await do_cancel()
 
-                show = dedent(f'''
-                The current list of listened repositories is:
-                `{repositories_to_listen}`!''')
+            show = dedent(f'''
+            The current list of listened repositories is:
+            `{repositories_to_listen}`!''')
 
-                await bot.send_message(chat, parse_mode='Markdown', text=show)
+            await bot.send_message(chat, parse_mode='Markdown', text=show)
 
     await parser(txt)
 
