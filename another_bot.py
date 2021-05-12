@@ -33,8 +33,6 @@ async def handle_message(message):
                             text='Subscribing to required repositories')
 
         subscribers[username] = (chat, array)
-        # print(subscribers.get(username))
-        # print(subscribers)
 
     async def do_cancel(array):
         await message.reply(parse_mode='Markdown',
@@ -66,9 +64,26 @@ async def handle_message(message):
         wanted_repos = re.findall(r'nekit2-002/\w*', txt)
         to_cancel = re.findall(r'cancel nekit2-002/\w*', txt)
 
+        if wanted_repos == [] and to_cancel == []:
+            greeting = dedent(f'''
+            Hello, `{username}`! This bot is created to check new commits
+            of certain repositories of *nekit2-002* user on Gitub.
+            To listen to new commits type the name of the repository like this:
+            *nekit2-002/name_of_the_repo*.
+
+            To cancel the subscribtion type:
+            *cancel nekit2-002/name_of_the_repo*.
+
+            The current list of avaluable repositories is:
+            `{repositories_full}`
+            ''')
+
+            await bot.send_message(chat, parse_mode='Markdown', text=greeting)
+
+            return
+
         if username in subscribers:
             current_listen = subscribers.get(username)[1]
-            # print(current_listen)
 
             if len(to_cancel) != 0:
                 await do_cancel(to_cancel)
@@ -120,15 +135,15 @@ async def handle_github(request):
     for user_in_sub in subscribers:
         chats_and_repos = subscribers.get(user_in_sub)
         chat = chats_and_repos[0]
-        wanted_repos = chats_and_repos[1]
+        user_repos = chats_and_repos[1]
 
         message = dedent(f'''
             *{user}* has pushed a commit to `{branch}`.
             Repository: [{repo_name}]({repo_url}).
         ''')
 
-        for reposit in range(len(wanted_repos)):
-            if repo_name == wanted_repos[reposit]:
+        for reposit in range(len(user_repos)):
+            if repo_name == user_repos[reposit]:
                 logging.info(message)
 
                 await bot.send_message(chat, parse_mode='Markdown',
