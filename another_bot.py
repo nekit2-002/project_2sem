@@ -128,7 +128,6 @@ async def handle_github(request):
     repo = data['repository']
     repo_name = repo['full_name']
     repo_url = repo['html_url']
-    # commit_msg = data['commits']['message']
 
     user = data['pusher']['name']
     branch = data['ref'].replace('refs/heads/', '')
