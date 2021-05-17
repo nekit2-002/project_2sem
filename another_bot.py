@@ -128,7 +128,7 @@ async def handle_github(request):
     repo = data['repository']
     repo_name = repo['full_name']
     repo_url = repo['html_url']
-    commit_msg = data['commits']['message']
+    # commit_msg = data['commits']['message']
 
     user = data['pusher']['name']
     branch = data['ref'].replace('refs/heads/', '')
@@ -140,10 +140,6 @@ async def handle_github(request):
 
         message = dedent(f'''
             *{user}* has pushed a commit to `{branch}`.
-
-            The commentary to the commit was:
-            *`{commit_msg}`*
-
             Repository: [{repo_name}]({repo_url}).
         ''')
 
