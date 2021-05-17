@@ -142,7 +142,7 @@ async def handle_github(request):
             *{user}* has pushed a commit to `{branch}`.
 
             The commentary to the commit was:
-            *{commit_msg}*
+            *`{commit_msg}`*
 
             Repository: [{repo_name}]({repo_url}).
         ''')
